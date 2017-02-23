@@ -45,16 +45,29 @@ export default class Drawer {
           break;
         case 'trapezoid':
           geometry = new THREE.Geometry();
-          geometry.vertices = [
-            new THREE.Vector3( -0.5, 0.5, -0.5 ),
-            new THREE.Vector3( -0.25, 0.9, -0.25 ),
-            new THREE.Vector3( -0.5, 0.5, 0.5 ),
-            new THREE.Vector3( -0.25, 0.9, 0.25 ),
-            new THREE.Vector3( 0.5, 0.5, -0.5 ),
-            new THREE.Vector3( 0.25, 0.9, -0.25 ),
-            new THREE.Vector3( 0.5, 0.5, 0.5 ),
-            new THREE.Vector3( 0.25, 0.9, 0.25 ),
-          ];
+          if (Math.random() < 0.5) {
+            geometry.vertices = [
+              new THREE.Vector3( -0.5, 0.5, -0.5 ),
+              new THREE.Vector3( -0.25, 0.9, -0.05 ),
+              new THREE.Vector3( -0.5, 0.5, 0.5 ),
+              new THREE.Vector3( -0.25, 0.9, 0.05 ),
+              new THREE.Vector3( 0.5, 0.5, -0.5 ),
+              new THREE.Vector3( 0.25, 0.9, -0.05 ),
+              new THREE.Vector3( 0.5, 0.5, 0.5 ),
+              new THREE.Vector3( 0.25, 0.9, 0.05 ),
+            ];
+          } else {
+            geometry.vertices = [
+              new THREE.Vector3( -0.5, 0.5, -0.5 ),
+              new THREE.Vector3( -0.05, 0.9, -0.25 ),
+              new THREE.Vector3( -0.5, 0.5, 0.5 ),
+              new THREE.Vector3( -0.05, 0.9, 0.25 ),
+              new THREE.Vector3( 0.5, 0.5, -0.5 ),
+              new THREE.Vector3( 0.05, 0.9, -0.25 ),
+              new THREE.Vector3( 0.5, 0.5, 0.5 ),
+              new THREE.Vector3( 0.05, 0.9, 0.25 ),
+            ];
+          }
           geometry.faces = [
             new THREE.Face3( 0, 1, 5 ),
             new THREE.Face3( 0, 5, 4 ),
@@ -69,10 +82,12 @@ export default class Drawer {
           ];
           break;
         case 'cone':
-          geometry = THREE.ConeGeometry(1, 1, 32);
+          geometry = new THREE.ConeGeometry(1, 1, 32);
           break;
         case 'road':
-          geometry = THREE.CatmullRomCurve3(points);
+          let curve = new THREE.CatmullRomCurve3(points);
+          geometry = new THREE.Geometry();
+          geometry.vertices = curve.getPoints(50);
           break;
       }
       return geometry;
@@ -84,7 +99,6 @@ export default class Drawer {
       let convertedColor = Drawer._getColor(color);
       let material = new THREE.MeshLambertMaterial({side: THREE.DoubleSide, color: convertedColor});
       if (type in this.meshes) {
-        console.log(type);
         let obj = this.meshes[type].clone();
         obj.material = material;
         return obj;

@@ -1,19 +1,12 @@
+import { v3, rgb, randColor, randGray, randSign, upperRand, randRange } from './Utils'
 const THREE = require('three');
-const v3 = (x, y, z) => { return new THREE.Vector3(x, y, z); };
+window.THREE = THREE;
+window.v3 = v3;
 const WHITE = rgb(255, 255, 255);
 const BLACK = rgb(0, 0, 0);
 
-const ROOF_TYPES = ['pyramid', 'trapezoid'];
-const TREE_TYPES = ['lpt_0', 'lpt_1', 'lpt_2'];
-const HOUSE_MAX_ITER = 2;
 
-function rgb(r, g, b) {
-  return {r, g, b};
-}
 
-function randColor() {
-  return {r: Math.random() * 255, g: Math.random() * 255, b: Math.random() * 255}
-}
 
 export class Shape {
   constructor(type, pos, size, rot, color, points = []) {
@@ -26,7 +19,8 @@ export class Shape {
   }
 
   copy() {
-    let newShape = new Shape(this.type, this.pos, this.size, this.rot, this.color, this.points); // this.points is shallow
+    let newColor = {r: this.color.r, g: this.color.g, b: this.color.b};
+    let newShape = new Shape(this.type, this.pos.clone(), this.size.clone(), this.rot.clone(), newColor, this.points); // this.points is shallow
     return newShape;
   }
 
@@ -45,11 +39,13 @@ export class Symbol {
   }
 
   static genericSymbol(opts = {}) {
-    let pos = opts.pos ? opts.pos : v3(0,0,0);
-    let size = opts.size ? opts.size : v3(0,0,0);
-    let rot = opts.rot ? opts.rot : v3(0,0,0);
-    let color = opts.color ? opts.color : rgb(0,0,0);
-    return new Symbol('X', new Shape('Y', pos, size, rot, color));
+    let pos = opts.pos ? opts.pos : v3();
+    let size = opts.size ? opts.size : v3(1,1,1);
+    let rot = opts.rot ? opts.rot : v3();
+    let color = opts.color ? opts.color : randColor();
+    let char = opts.char ? opts.char : 'X';
+    let type = opts.type ? opts.type : 'Y';
+    return new Symbol(char, new Shape(type, pos, size, rot, color));
   }
 
   static genRoof(refSymbol, opts = {}) {
@@ -59,29 +55,29 @@ export class Symbol {
     let { char, shape: {type, pos, size, rot, color}, iter } = refSymbol;
 
     let newType = ROOF_TYPES[Math.floor(Math.random() * ROOF_TYPES.length)];
-    let roofShape = new Shape(newType, v3(0,size.y / 2,0).add(pos), v3(1,1,1).multiply(size), rot, randColor());
+    let roofShape = new Shape(newType, v3(0,size.y / 2,0).add(pos), v3(1,1,1).multiply(size), rot, randGray());
     let roofSymbol = new Symbol('R', roofShape, iter + 1);
     return roofSymbol;
   }
 
   static genHouse(char, refSymbol, opts = {}) {
     if (!refSymbol) {
-      refSymbol = Symbol.genericSymbol({size: v3(2,1,2)});
+      refSymbol = Symbol.genericSymbol({size: v3(2,1,2), color: randColor()});
     }
     let { shape: {pos, size, rot, color}, iter } = refSymbol;
     let newChar = iter + 1 > HOUSE_MAX_ITER ? 'T' : char;
     let newPos, newSize;
     if (opts.nextLevel) {
       newPos = v3(0, size.y, 0).add(pos);
-      let random = Math.random() * 0.5 + 0.5;
+      let random = upperRand();
       newSize = v3(random,Math.random() + 0.5,random).multiply(size);
     } else {
-      let newPosX = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.5 + 0.5) * size.x * 0.5;
-      let newPosZ = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.5 + 0.5) * size.z * 0.5;
+      let newPosX = (Math.random() > 0.5 ? 1 : -1) * (upperRand()) * size.x * 0.5;
+      let newPosZ = (Math.random() > 0.5 ? 1 : -1) * (upperRand()) * size.z * 0.5;
       newPos = v3(newPosX, 0, newPosZ);
-      newSize = v3(Math.random() * 0.5 + 0.5, Math.random() + 0.5, Math.random() * 0.5 + 0.5).multiply(size);
+      newSize = v3(upperRand(), Math.random() + 0.5, upperRand()).multiply(size);
     }
-    let houseShape = new Shape('box', newPos, newSize, v3(0, 0, 0), randColor());
+    let houseShape = new Shape('box', newPos, newSize, v3(0, 0, 0), color);
     let houseSymbol = new Symbol(newChar, houseShape, iter + 1);
     return houseSymbol;
   }
@@ -95,29 +91,17 @@ export class Symbol {
     let newPos, newSize;
     if (opts.nextLevel) {
       newPos = v3(0, size.y, 0).add(pos);
-      let random = Math.random() * 0.5 + 0.5;
+      let random = upperRand();
       newSize = v3(random,Math.random() + 0.5,random).multiply(size);
     } else {
-      let newPosX = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.5 + 0.5) * size.x * 0.5;
-      let newPosZ = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 0.5 + 0.5) * size.z * 0.5;
+      let newPosX = (Math.random() > 0.5 ? 1 : -1) * (upperRand()) * size.x * 0.5;
+      let newPosZ = (Math.random() > 0.5 ? 1 : -1) * (upperRand()) * size.z * 0.5;
       newPos = v3(newPosX, 0, newPosZ);
-      newSize = v3(Math.random() * 0.5 + 0.5, Math.random() + 0.5, Math.random() * 0.5 + 0.5).multiply(size);
+      newSize = v3(upperRand(), Math.random() + 0.5, upperRand()).multiply(size);
     }
-    let houseShape = new Shape('box', newPos, newSize, v3(0, 0, 0), randColor());
+    let houseShape = new Shape('box', newPos, newSize, v3(0, 0, 0), color);
     let houseSymbol = new Symbol(newChar, houseShape, iter + 1);
     return houseSymbol;
-  }
-
-
-
-  static genGround(refSymbol, opts = {}) {
-    if (!refSymbol) {
-      refSymbol = Symbol.genericSymbol();
-    }
-    let { char, shape: {pos, size, rot, color}, iter } = refSymbol;
-    let groundShape = new Shape('plane', v3(0,0,0), v3(300,300,1), v3(90,0,0), rgb(3, 105, 32));
-    let groundSymbol = new Symbol('G', groundShape);
-    return groundSymbol;
   }
 
   static genTower(refSymbol, opts = {}) {
@@ -125,12 +109,12 @@ export class Symbol {
       refSymbol = Symbol.genericSymbol({size: v3(1,1,1)});
     }
     let { char, shape: {pos, size, rot, color}, iter } = refSymbol;
-    let towerShape = new Shape('tower', v3(1,0,0), v3(0.0025,0.0025,0.0025), v3(0,0,0), rgb(220,220,220));
+    let towerShape = new Shape('tower', v3(1,0,0), v3(0.0025,0.0025,0.0025), v3(), rgb(220,220,220));
     let towerSymbol = new Symbol('W', towerShape);
     return towerSymbol;
   }
 
-  static genRoad(refSymbol, opts = {}) {
+  static genRoadConstructive(refSymbol, opts = {}) {
     if (!refSymbol) {
       refSymbol = Symbol.genericSymbol({size: v3(1,1,1)});
     }
@@ -157,14 +141,4 @@ export class Symbol {
     return newPoints;
   }
 
-  static genTree(refSymbol, opts = {}) {
-    if (!refSymbol) {
-      refSymbol = Symbol.genericSymbol({size: v3(1,1,1)});
-    }
-    let { char, shape: {pos, size, rot, color, points}, iter } = refSymbol;
-    let newType = TREE_TYPES[Math.floor(Math.random() * TREE_TYPES.length)];
-    let treeShape = new Shape(newType, v3(1,0,0), v3(0.4,0.4,0.4), v3(0,0,0), rgb(44, 68, 0));
-    let treeSymbol = new Symbol('E', treeShape);
-    return treeSymbol;
-  }
 }
